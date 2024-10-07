@@ -229,7 +229,7 @@ Matrix solveMaximizationProblem(Matrix C, Matrix A, Matrix b, double epsilon) {
         // Defining row with minimal result of function
         for (int i = 1; i < Iteration.getRow(); i++) {
             double v = Iteration.getMatrixCell(i, Iteration.getColumn() - 1) / Iteration.getMatrixCell(i, minColumnIndex);
-            if (v < minRow) {
+            if (v < minRow && v >= 0) {
                 minRow = v;
                 minRowDelimeter = Iteration.getMatrixCell(i, minColumnIndex);
                 minRowIndex = i;
