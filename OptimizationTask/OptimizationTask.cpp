@@ -220,6 +220,7 @@ Matrix solveMaximizationProblem(Matrix C, Matrix A, Matrix b, double epsilon) {
                 minColumnIndex = i;
             }
         }
+        // If no negative values, then we have done
         if (minZValue >= 0) {
             return Iteration;
         }
@@ -248,7 +249,7 @@ Matrix solveMaximizationProblem(Matrix C, Matrix A, Matrix b, double epsilon) {
                 NextIteration.setMatrixCell(i, j, newValue);
             }
         }
-        cout << NextIteration;
+        cout << "Debug: " << NextIteration << '\n';
         Iteration = NextIteration.clone();
     }
 }
@@ -273,5 +274,15 @@ int main() {
     double epsilon;
     cin >> epsilon;
 
-    cout << solveMaximizationProblem(C, A, b, epsilon);
+    Matrix ans = solveMaximizationProblem(C, A, b, epsilon);
+
+    cout << "Solution vector is: (";
+    for (int i = 0; i < ans.getColumn() - 1; i++) {
+        cout << ans.getMatrixCell(0, i);
+        if (i < ans.getColumn() - 2) {
+            cout << ", ";
+        }
+    }
+    cout << ")\n";
+    cout << "Maximum value is: " << ans.getMatrixCell(0, ans.getColumn() - 1);
 }
