@@ -173,34 +173,80 @@ public:
 
 };
 
-Matrix solveMaximizationProblem(Matrix C, Matrix A, Matrix b, double epsilon) {
+void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double epsilon) {
     // This vector will contain iteration table
-    vector<vector<double>> it_vector;
-    it_vector.emplace_back();
+    vector<vector<double>> itVector;
+    itVector.emplace_back();
 
     // Copying values from task to z-row
-    for (int i = 0; i < A.getColumn(); i++) {  
-        it_vector[0].push_back(-C.getMatrixCell(0, i));
+    if (type == "max") {
+        for (int i = 0; i < A.getColumn(); i++) {
+            itVector[0].push_back(-C.getMatrixCell(0, i));
+        }
     }
+    else if (type == "min") {
+        for (int i = 0; i < A.getColumn(); i++) {
+            itVector[0].push_back(C.getMatrixCell(0, i));
+        }
+    } else {
+        cout << "Input Error";
+        return;
+    }
+
+    
     // Setting solution to 0
-    it_vector[0].push_back(0);
+    itVector[0].push_back(0);
 
     // Completing table with values from constraints and right-hand side vector
     for (int i = 1; i <= A.getRow(); i++) {
-        it_vector.emplace_back();
+        itVector.emplace_back();
         for (int j = 0; j <= A.getColumn(); j++) {
             if (j == A.getColumn()) {
-                it_vector[i].push_back(b.getMatrixCell(i - 1, 0));
+                itVector[i].push_back(b.getMatrixCell(i - 1, 0));
             }
             else {
-                it_vector[i].push_back(A.getMatrixCell(i - 1, j));
+                itVector[i].push_back(A.getMatrixCell(i - 1, j));
             }
             
         }
     }
 
     // 0 Iteration table
-    Matrix Iteration(it_vector);
+    Matrix Iteration(itVector);
+    cout << Iteration;
+
+    vector<double> solutionVector(C.getColumn(), 0);
+    vector<int> unitVectors(A.getRow(), -1);
+    int basicVectorCounter = 0;
+
+    // Identifying basic vectors (Checking which of them are unit)
+    for (int i = 0; i < Iteration.getColumn() - 1; i++) {
+        int zeros = 0, ones = 0, unitIndex = 999;
+        for (int j = 1; j < Iteration.getRow(); j++) {
+            if (Iteration.getMatrixCell(j, i) == 0) zeros++;
+            else if (Iteration.getMatrixCell(j, i) == 1) {
+                ones++;
+                unitIndex = j;
+            }
+            else break;
+        }
+        if (ones == 1 and zeros == A.getRow() - 1) {
+            basicVectorCounter++;
+            solutionVector[i] = Iteration.getMatrixCell(unitIndex, Iteration.getColumn() - 1);
+            unitVectors[unitIndex - 1] = i;
+        }
+    }
+
+    cout << "Debug: solutionVector and unitVector \n";
+    for (int i = 0; i < solutionVector.size(); i++) {
+        cout << solutionVector[i] << ' ';
+    }
+    cout << '\n';
+    for (int i = 0; i < unitVectors.size(); i++) {
+        cout << unitVectors[i] << ' ';
+    }
+    cout << '\n';
+    
 
     while (true) {
         Matrix NextIteration = Iteration.clone();
@@ -220,9 +266,25 @@ Matrix solveMaximizationProblem(Matrix C, Matrix A, Matrix b, double epsilon) {
                 minColumnIndex = i;
             }
         }
-        // If no negative values, then we have done
+        // If no negative values, then we are done
+        // Outputing answer and returning
         if (minZValue >= 0) {
-            return Iteration;
+            cout << "A vector of decision variables is: (";
+            for (int i = 0; i < solutionVector.size(); i++) {
+                cout << solutionVector[i];
+                if (i < solutionVector.size() - 1) {
+                    cout << ' ';
+                }
+            }
+            cout << ")\n";
+            if (type == "max") {
+                cout << "Maximum value of the objective function is: " << Iteration.getMatrixCell(0, Iteration.getColumn() - 1);
+            }
+            else {
+                cout << "Minimum value of the objective function is: " << -Iteration.getMatrixCell(0, Iteration.getColumn() - 1);
+            }
+            
+            return;
         }
 
 
@@ -241,6 +303,8 @@ Matrix solveMaximizationProblem(Matrix C, Matrix A, Matrix b, double epsilon) {
             NextIteration.setMatrixCell(minRowIndex, i, NextIteration.getMatrixCell(minRowIndex, i) / minRowDelimeter);
         }
 
+        
+
         // Completing the table
         for (int i = 0; i < NextIteration.getRow(); i++) {
             for (int j = 0; j < NextIteration.getColumn(); j++) {
@@ -249,6 +313,19 @@ Matrix solveMaximizationProblem(Matrix C, Matrix A, Matrix b, double epsilon) {
                 NextIteration.setMatrixCell(i, j, newValue);
             }
         }
+
+        // Updating replacing old variable with new one and updating solution vector
+        unitVectors[minRowIndex - 1] = minColumnIndex;
+        fill(solutionVector.begin(), solutionVector.end(), 0);
+        for (int i = 0; i < unitVectors.size(); i++) {
+            solutionVector[unitVectors[i]] = NextIteration.getMatrixCell(i + 1, Iteration.getColumn() - 1);
+        }
+        cout << "Debug: Solution vector \n";
+        for (int i = 0; i < solutionVector.size(); i++) {
+            cout << solutionVector[i] << ' ';
+        }
+        cout << '\n';
+
         cout << "Debug: " << NextIteration << '\n';
         Iteration = NextIteration.clone();
     }
@@ -256,6 +333,9 @@ Matrix solveMaximizationProblem(Matrix C, Matrix A, Matrix b, double epsilon) {
 
 
 int main() {
+    string type;
+    cin >> type;
+
     int C_size;
     cin >> C_size;
     Matrix C(1, C_size);
@@ -274,15 +354,5 @@ int main() {
     double epsilon;
     cin >> epsilon;
 
-    Matrix ans = solveMaximizationProblem(C, A, b, epsilon);
-
-    cout << "Solution vector is: (";
-    for (int i = 0; i < ans.getColumn() - 1; i++) {
-        cout << ans.getMatrixCell(0, i);
-        if (i < ans.getColumn() - 2) {
-            cout << ", ";
-        }
-    }
-    cout << ")\n";
-    cout << "Maximum value is: " << ans.getMatrixCell(0, ans.getColumn() - 1);
+    solveMaximizationProblem(type, C, A, b, epsilon);
 }
