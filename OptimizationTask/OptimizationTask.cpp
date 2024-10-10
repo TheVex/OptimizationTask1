@@ -217,7 +217,6 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
 
     vector<double> solutionVector(C.getColumn(), 0);
     vector<int> unitVectors(A.getRow(), -1);
-    int basicVectorCounter = 0;
 
     // Identifying basic vectors (Checking which of them are unit)
     for (int i = 0; i < Iteration.getColumn() - 1; i++) {
@@ -231,9 +230,16 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
             else break;
         }
         if (ones == 1 and zeros == A.getRow() - 1) {
-            basicVectorCounter++;
             solutionVector[i] = Iteration.getMatrixCell(unitIndex, Iteration.getColumn() - 1);
             unitVectors[unitIndex - 1] = i;
+        }
+    }
+
+    // If we do not have enough unit vectors, then method is not applicable
+    for (int i = 0; i < unitVectors.size(); i++) {
+        if (unitVectors[i] == -1) {
+            cout << "Simplex Method is not applicable";
+            return;
         }
     }
 
