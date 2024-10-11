@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <vector>
 #include <cmath>
+#include <sstream>
 
 using namespace std;
 
@@ -173,7 +174,10 @@ public:
 
 };
 
-void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double epsilon) {
+void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, int precision) {
+    // In use when we are eounding values
+    int roundValue = pow(10, precision);
+
     // This vector will contain iteration table
     vector<vector<double>> itVector;
     itVector.emplace_back();
@@ -243,7 +247,7 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
         }
     }
 
-    cout << "Debug: solutionVector and unitVector \n";
+    cout << "\nDebug: solutionVector and unitVector \n";
     for (int i = 0; i < solutionVector.size(); i++) {
         cout << solutionVector[i] << ' ';
     }
@@ -252,22 +256,28 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
         cout << unitVectors[i] << ' ';
     }
     cout << '\n';
-    
+    cout << '\n';
 
+    int iterationCount = 0;
     while (true) {
+        iterationCount++;
+        if (iterationCount > 1000) {
+            cout << "Simplex Method is not applicable";
+            return;
+        }
         Matrix NextIteration = Iteration.clone();
-
+        
         double minZValue = 0;
-        int minColumnIndex = 999;
+        int minColumnIndex = INT_MAX;
 
-        double minRow = 999999;
-        double minRowDelimeter = 999999;
-        int minRowIndex = 999;
+        double minRow = INT_MAX;
+        double minRowDelimeter = INT_MAX;
+        int minRowIndex = INT_MAX;
 
         // Looking for minimal value for next iteration
         for (int i = 0; i < Iteration.getColumn() - 1; i++) {
             int t = Iteration.getMatrixCell(0, i);
-            if (t < 0 && t < minZValue) {
+            if (t < minZValue) {
                 minZValue = t;
                 minColumnIndex = i;
             }
@@ -283,11 +293,16 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
                 }
             }
             cout << ")\n";
+            double value = 0;
+            for (int i = 0; i < C.getColumn(); i++) {
+                value += C.getMatrixCell(0, i) * solutionVector[i];
+            }
             if (type == "max") {
-                cout << "Maximum value of the objective function is: " << Iteration.getMatrixCell(0, Iteration.getColumn() - 1);
+                cout << "Maximum value of the objective function is: " << value;
             }
             else {
-                cout << "Minimum value of the objective function is: " << -Iteration.getMatrixCell(0, Iteration.getColumn() - 1);
+                
+                cout << "Minimum value of the objective function is: " << value;
             }
             
             return;
@@ -296,6 +311,8 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
 
         // Defining row with minimal result of function
         for (int i = 1; i < Iteration.getRow(); i++) {
+            if (Iteration.getMatrixCell(i, minColumnIndex) == 0) continue;
+            
             double v = Iteration.getMatrixCell(i, Iteration.getColumn() - 1) / Iteration.getMatrixCell(i, minColumnIndex);
             if (v < minRow && v >= 0) {
                 minRow = v;
@@ -304,9 +321,15 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
             }
         }
 
+        if (minRow == INT_MAX) {
+            cout << "Simplex Method is not applicable";
+            return;
+        }
+
         // Dividing new row by its delimeter
         for (int i = 0; i < NextIteration.getColumn(); i++) {
-            NextIteration.setMatrixCell(minRowIndex, i, NextIteration.getMatrixCell(minRowIndex, i) / minRowDelimeter);
+            double newValue = NextIteration.getMatrixCell(minRowIndex, i) / minRowDelimeter;
+            NextIteration.setMatrixCell(minRowIndex, i, round(newValue * roundValue) / roundValue);
         }
 
         
@@ -316,7 +339,7 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
             for (int j = 0; j < NextIteration.getColumn(); j++) {
                 if (i == minRowIndex) continue;
                 double newValue = Iteration.getMatrixCell(i, j) - Iteration.getMatrixCell(i, minColumnIndex) * NextIteration.getMatrixCell(minRowIndex, j);
-                NextIteration.setMatrixCell(i, j, newValue);
+                NextIteration.setMatrixCell(i, j, round(newValue * roundValue) / roundValue);
             }
         }
 
@@ -338,27 +361,44 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, double 
 }
 
 
+int approximationIdentifier(double epsilon) {
+    string temp = to_string(epsilon);
+    bool flag = false;
+    int ans = 0;
+    for (int i = 0; i < temp.size(); i++) {
+        if (flag) ans++;
+        if (temp[i] == '1') {
+            return ans;
+        }
+        if (temp[i] == '.') {
+            flag = true;
+        }
+    }
+    return -1;
+}
+
 int main() {
     string type;
     cin >> type;
+    int constraintsNumber, variablesNumber;
+    cin >> constraintsNumber >> variablesNumber;
 
-    int C_size;
-    cin >> C_size;
-    Matrix C(1, C_size);
+    Matrix C(1, variablesNumber);
     C.matrixInputReader();
 
-    int A_width, A_length;
-    cin >> A_width >> A_length;
-    Matrix A(A_width, A_length);
+    Matrix A(constraintsNumber, variablesNumber);
     A.matrixInputReader();
 
-    int b_size;
-    cin >> b_size;
-    Matrix b(b_size, 1);
+    Matrix b(constraintsNumber, 1);
     b.matrixInputReader();
 
     double epsilon;
     cin >> epsilon;
 
-    solveMaximizationProblem(type, C, A, b, epsilon);
+    int precision = approximationIdentifier(epsilon);
+    if (precision == -1) {
+        cout << "Input Error";
+        return 0;
+    }
+    solveMaximizationProblem(type, C, A, b, precision);
 }
