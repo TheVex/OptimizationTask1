@@ -361,22 +361,6 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, int pre
 }
 
 
-int approximationIdentifier(double epsilon) {
-    string temp = to_string(epsilon);
-    bool flag = false;
-    int ans = 0;
-    for (int i = 0; i < temp.size(); i++) {
-        if (flag) ans++;
-        if (temp[i] == '1') {
-            return ans;
-        }
-        if (temp[i] == '.') {
-            flag = true;
-        }
-    }
-    return -1;
-}
-
 int main() {
     string type;
     cin >> type;
@@ -395,10 +379,6 @@ int main() {
     double epsilon;
     cin >> epsilon;
 
-    int precision = approximationIdentifier(epsilon);
-    if (precision == -1) {
-        cout << "Input Error";
-        return 0;
-    }
+    int precision = abs(log10(epsilon));
     solveMaximizationProblem(type, C, A, b, precision);
 }
