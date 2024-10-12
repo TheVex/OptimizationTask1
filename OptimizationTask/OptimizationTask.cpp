@@ -341,23 +341,43 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, int pre
     }
 }
 
+/*
+    Input example:
+
+    max
+    3 6
+    9 10 16 0 0 0
+    18 15 12 1 0 0
+    6 4 8 0 1 0
+    5 3 3 0 0 1
+    360 192 180
+    0.01
+*/
 
 int main() {
     string type;
+    cout << "Please, write LPP type: if maximization, write \'max\' (without brackets), \n";
+    cout << "If minimization, write \'min\': \n";
     cin >> type;
+    
     int constraintsNumber, variablesNumber;
+    cout << "Then, write number of constraints N and number of variables in objective function M in format \'N M\':\n";
     cin >> constraintsNumber >> variablesNumber;
 
     Matrix C(1, variablesNumber);
+    cout << "Now, write matrix C (objective function coefficients): \n";
     C.matrixInputReader();
 
     Matrix A(constraintsNumber, variablesNumber);
+    cout << "Please, write matrix of coefficients of constraint function A: \n";
     A.matrixInputReader();
-
+    
     Matrix b(constraintsNumber, 1);
+    cout << "Please, write a vector of right-hand side numbers b: \n";
     b.matrixInputReader();
 
     double epsilon;
+    cout << "Finally, write the approximation accuracy epsilon: \n";
     cin >> epsilon;
 
     int precision = abs(log10(epsilon));
