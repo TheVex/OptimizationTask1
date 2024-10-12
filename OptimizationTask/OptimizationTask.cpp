@@ -217,7 +217,6 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, int pre
 
     // 0 Iteration table
     Matrix Iteration(itVector);
-    cout << Iteration;
 
     vector<double> solutionVector(C.getColumn(), 0);
     vector<int> unitVectors(A.getRow(), -1);
@@ -246,17 +245,6 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, int pre
             return;
         }
     }
-
-    cout << "\nDebug: solutionVector and unitVector \n";
-    for (int i = 0; i < solutionVector.size(); i++) {
-        cout << solutionVector[i] << ' ';
-    }
-    cout << '\n';
-    for (int i = 0; i < unitVectors.size(); i++) {
-        cout << unitVectors[i] << ' ';
-    }
-    cout << '\n';
-    cout << '\n';
 
     int iterationCount = 0;
     while (true) {
@@ -349,13 +337,6 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, int pre
         for (int i = 0; i < unitVectors.size(); i++) {
             solutionVector[unitVectors[i]] = NextIteration.getMatrixCell(i + 1, Iteration.getColumn() - 1);
         }
-        cout << "Debug: Solution vector \n";
-        for (int i = 0; i < solutionVector.size(); i++) {
-            cout << solutionVector[i] << ' ';
-        }
-        cout << '\n';
-
-        cout << "Debug: " << NextIteration << '\n';
         Iteration = NextIteration.clone();
     }
 }
