@@ -276,7 +276,7 @@ void solveMaximizationProblem(string type, Matrix C, Matrix A, Matrix b, int pre
 
         // Looking for minimal value for next iteration
         for (int i = 0; i < Iteration.getColumn() - 1; i++) {
-            int t = Iteration.getMatrixCell(0, i);
+            double t = Iteration.getMatrixCell(0, i);
             if (t < minZValue) {
                 minZValue = t;
                 minColumnIndex = i;
